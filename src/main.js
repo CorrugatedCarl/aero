@@ -25,9 +25,9 @@ const actions = {
     renderer.follow(sim, 0, true); crashBox.hidden = true; setPaused(false);
   },
   approach: () => {
-    // 3° final, 3.2 km out, gear down, landing flaps, trimmed for about 140 kt
-    sim.spawnAir({ x: RUNWAY.x0 + 300 - 3200, y: 3200 * Math.tan(3 * DEG) + 2, speed: 70, gamma: -3 * DEG,
-      alpha: 3 * DEG, gearDown: true, flaps: 2, throttle: 0.55, trim: -7 * DEG }, controls);
+    // 3° final, 3.2 km out, gear down, landing flaps, trimmed for about 130 kt
+    sim.spawnAir({ x: RUNWAY.x0 + 300 - 3200, y: 3200 * Math.tan(3 * DEG) + 3.5, speed: 68, gamma: -3 * DEG,
+      alpha: 4 * DEG, gearDown: true, flaps: 2, throttle: 0.55, trim: -8 * DEG }, controls);
     input.resetState(); input.parkingBrake = false; renderer.particles = [];
     renderer.follow(sim, 0, true); crashBox.hidden = true; setPaused(false);
   },

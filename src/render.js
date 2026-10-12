@@ -13,57 +13,6 @@ const mix = (a, b, t) => {
   return `rgb(${pa.map((v, i) => Math.round(lerp(v, pb[i], t))).join(',')})`;
 };
 
-// The built-in stand-in jet, drawn once to an offscreen canvas at SPRITE.pxPerMeter.
-export function makeStandInSprite(doc = document) {
-  const ppm = SPRITE.pxPerMeter, cg = [7.4 * ppm, 3.1 * ppm];
-  const cv = doc.createElement('canvas');
-  cv.width = Math.ceil(15.4 * ppm); cv.height = Math.ceil(4.4 * ppm);
-  const g = cv.getContext('2d');
-  g.translate(cg[0], cg[1]); g.scale(ppm, -ppm); g.lineJoin = 'round';
-  const path = (pts, close = true) => { g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); if (close) g.closePath(); };
-  // fin and horizontal tail behind the fuselage
-  path([[-4.3, 0.55], [-5.9, 2.75], [-6.95, 2.75], [-6.55, 0.4]]);
-  g.fillStyle = '#6f7a86'; g.fill();
-  g.strokeStyle = '#4a535d'; g.lineWidth = 0.04; g.beginPath(); g.moveTo(-6.15, 0.5); g.lineTo(-6.65, 2.7); g.stroke(); // rudder hinge
-  path([[-4.7, 0.42], [-6.1, 0.47], [-6.95, 0.33], [-6.2, 0.22], [-4.9, 0.28]]);
-  g.fillStyle = '#5c6670'; g.fill();
-  // fuselage: darker top, lighter belly
-  const body = [[7.6, -0.05], [6.9, 0.25], [5.9, 0.5], [4.6, 0.66], [2.0, 0.7], [-1.5, 0.66], [-3.4, 0.6], [-5.2, 0.5],
-    [-6.4, 0.43], [-6.6, 0.4], [-6.6, -0.06], [-5.2, -0.2], [-3.0, -0.5], [2.6, -0.52], [5.0, -0.46], [6.6, -0.3]];
-  path(body);
-  const grad = g.createLinearGradient(0, 0.7, 0, -0.55);
-  grad.addColorStop(0, '#7d8994'); grad.addColorStop(0.55, '#a7b1ba'); grad.addColorStop(1, '#c9d0d6');
-  g.fillStyle = grad; g.fill();
-  g.strokeStyle = '#3f4750'; g.lineWidth = 0.05; g.stroke();
-  // radome
-  path([[7.6, -0.05], [6.9, 0.25], [6.25, 0.4], [6.25, -0.36], [6.6, -0.3]]);
-  g.fillStyle = '#59636d'; g.fill();
-  // canopy
-  path([[4.9, 0.64], [4.1, 1.02], [2.9, 1.16], [1.4, 1.06], [0.6, 0.7]]);
-  const cg2 = g.createLinearGradient(0, 1.16, 0, 0.64);
-  cg2.addColorStop(0, '#d9e6ee'); cg2.addColorStop(0.4, '#6f8fa6'); cg2.addColorStop(1, '#2c3d4a');
-  g.fillStyle = cg2; g.fill(); g.strokeStyle = '#2d343b'; g.lineWidth = 0.05; g.stroke();
-  g.beginPath(); g.moveTo(3.2, 1.15); g.lineTo(3.0, 0.68); g.stroke(); // canopy frame
-  // intake
-  path([[3.6, 0.05], [3.6, -0.42], [1.4, -0.48], [1.4, 0.0]]);
-  g.fillStyle = '#8c969f'; g.fill();
-  path([[3.6, 0.03], [3.45, 0.03], [3.45, -0.4], [3.6, -0.4]]); g.fillStyle = '#1d2227'; g.fill();
-  // wing root seen edge-on
-  path([[2.4, -0.1], [0.6, -0.04], [-1.3, -0.12], [-1.4, -0.22], [0.4, -0.28], [2.3, -0.2]]);
-  g.fillStyle = '#6a747e'; g.fill();
-  // nozzle
-  path([[-6.4, 0.42], [-6.95, 0.38], [-6.95, -0.04], [-6.4, -0.06]]);
-  g.fillStyle = '#3a3330'; g.fill();
-  // panel lines and stencil
-  g.strokeStyle = 'rgba(40,48,56,0.45)'; g.lineWidth = 0.025;
-  for (const x of [5.0, 0.6, -3.0, -5.0]) { g.beginPath(); g.moveTo(x, 0.66); g.lineTo(x, -0.5); g.stroke(); }
-  g.save(); g.scale(1 / ppm, -1 / ppm);
-  g.fillStyle = '#2d343b'; g.font = `bold ${0.34 * ppm}px "B612 Mono", monospace`;
-  g.fillText('AERO 01', -2.6 * ppm, -0.0 * ppm);
-  g.restore();
-  return { img: cv, cgPx: cg, ppm };
-}
-
 export class Renderer {
   constructor(canvas) {
     this.cv = canvas;
@@ -71,12 +20,10 @@ export class Renderer {
     this.cam = { x: 0, y: 0, z: 12, ox: 0, oy: 0 };
     this.particles = [];
     this.np = neutralPoint(WING, TAIL);
-    this.sprite = makeStandInSprite();
-    if (SPRITE.src) {
-      const img = new Image();
-      img.onload = () => { this.sprite = { img, cgPx: SPRITE.cgPx, ppm: SPRITE.pxPerMeter }; };
-      img.src = SPRITE.src;
-    }
+    this.sprite = null; // drawn once the image has loaded
+    const img = new Image();
+    img.onload = () => { this.sprite = { img, cgPx: SPRITE.cgPx, ppm: SPRITE.pxPerMeter }; };
+    img.src = SPRITE.src;
     this.resize();
   }
 
@@ -355,10 +302,14 @@ export class Renderer {
     }
     // the sprite
     const s = this.sprite;
-    ctx.save();
-    ctx.translate(p.x, p.y); ctx.rotate(th); ctx.scale(1 / s.ppm, -1 / s.ppm);
-    ctx.drawImage(s.img, -s.cgPx[0], -s.cgPx[1]);
-    ctx.restore();
+    if (s) {
+      ctx.save();
+      ctx.translate(p.x, p.y); ctx.rotate(th); ctx.scale(1 / s.ppm, -1 / s.ppm);
+      // crisp pixels when enlarged, smoothed when shrunk far out
+      ctx.imageSmoothingEnabled = !SPRITE.pixelArt || this.cam.z * k < s.ppm;
+      ctx.drawImage(s.img, -s.cgPx[0], -s.cgPx[1]);
+      ctx.restore();
+    }
     // moving surfaces on top (body frame)
     ctx.save();
     ctx.translate(p.x, p.y); ctx.rotate(th);
@@ -366,9 +317,9 @@ export class Renderer {
       ctx.save(); ctx.translate(h[0], h[1]); ctx.rotate(angle);
       ctx.fillStyle = color; ctx.fillRect(-len, -w / 2, len, w); ctx.restore();
     };
-    if (ac.flapAngle > 0.01) plate(V.flapHinge, V.flapChord, ac.flapAngle, 0.1, '#59626b');
-    plate(V.elevatorHinge, V.elevatorChord, ac.elevator, 0.09, '#4b545d');
-    if (ac.speedBrake > 0.01) {
+    if (V.flapChord > 0 && ac.flapAngle > 0.01) plate(V.flapHinge, V.flapChord, ac.flapAngle, 0.1, '#59626b');
+    if (V.elevatorChord > 0) plate(V.elevatorHinge, V.elevatorChord, ac.elevator, 0.09, '#4b545d');
+    if (V.speedBrakeLength > 0 && ac.speedBrake > 0.01) {
       ctx.save(); ctx.translate(V.speedBrakeHinge[0], V.speedBrakeHinge[1]); ctx.rotate(Math.PI + ac.speedBrake * 50 * DEG);
       ctx.fillStyle = '#c0392b'; ctx.fillRect(0, -0.05, V.speedBrakeLength, 0.1); ctx.restore();
     }

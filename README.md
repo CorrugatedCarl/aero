@@ -1,6 +1,6 @@
 # Aero Test Range
 
-A 2D side-scrolling jet built on real rigid-body physics: Planck.js (Box2D) bodies and joints, plus
+A 2D side-scrolling jet (your ship, `ship.png`) built on real rigid-body physics: Planck.js (Box2D) bodies and joints, plus
 wing and tail aerodynamics applied every step. Infinite procedural terrain with a painted runway
 at the origin. Made for iPad first: touch controls and an Xbox controller over Bluetooth.
 
@@ -23,7 +23,7 @@ node tools/build-single.mjs     # → dist/aero.html
 * **Take off:** push the throttle to the top (MIL) and let it spool up. Pull back at about
   120 kt, hold about 10° nose up, raise the gear once climbing (GEAR), then flaps UP.
 * **Land:** press *Final approach* for a 3° final, or fly your own. Use landing flaps, gear down,
-  about 135 kt, and keep the PAPI lights two white, two red. Flare just above the runway, then
+  about 130 kt, and keep the PAPI lights two white, two red. Flare just above the runway, then
   idle, speed brake and wheel brakes.
 * **Debug** draws the lift, drag, thrust and weight vectors, the CG, neutral point and
   aerodynamic centres, and shows AoA, CL, CD, downwash, ground effect, spool and strut readouts.

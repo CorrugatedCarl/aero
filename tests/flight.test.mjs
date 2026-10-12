@@ -106,11 +106,13 @@ test('gear retracts in its transit time, not with weight on wheels', () => {
 });
 
 // drop onto the runway from just above it at a given sink rate and attitude
+const main = config.GEAR.legs.find((l) => l.id === 'main');
+const mainDrop = -(main.attach[1] - main.length - main.wheelRadius); // CG height above the main wheel bottoms
 function drop(sink, attitudeDeg, gearDown = true) {
   const sim = new Sim(), c = defaultControls();
   const attitude = attitudeDeg * DEG;
   sim.spawnAir({
-    x: 500, y: 2.65 + 0.8 * Math.sin(attitude), speed: Math.hypot(62, sink), gamma: -Math.atan2(sink, 62),
+    x: 500, y: 0.6 + mainDrop + Math.abs(main.attach[0]) * Math.sin(attitude), speed: Math.hypot(62, sink), gamma: -Math.atan2(sink, 62),
     alpha: attitude + Math.atan2(sink, 62), gearDown, flaps: 2, throttle: 0,
   }, c);
   let touch = null;

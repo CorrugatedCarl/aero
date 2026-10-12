@@ -91,13 +91,13 @@ export class Sim {
     const gearHolds = ac.legs.some((l) => !l.broken && l.extension > 0.9);
     const gearUp = ac.legs.every((l) => l.broken || l.extension < 0.5);
     if (dv > AIRFRAME.crashDeltaV) {
-      const why = hull.index === 0 ? 'NOSE IMPACT' : hull.index >= 2 ? 'TAIL IMPACT' : gearUp ? 'GEAR-UP IMPACT' : 'HARD IMPACT';
+      const why = hull.index === 0 ? 'NOSE IMPACT' : hull.index >= AIRFRAME.tailParts ? 'TAIL IMPACT' : gearUp ? 'GEAR-UP IMPACT' : 'HARD IMPACT';
       ac.crash(`${why} (${dv.toFixed(1)} m/s)`);
     } else if (!gearHolds && speed > AIRFRAME.bellySpeed) {
       // nothing left to hold the airframe off the ground at speed: a belly landing wrecks it
       ac.crash(gearUp && !ac.legs.some((l) => l.broken) ? 'GEAR-UP LANDING' : 'GEAR COLLAPSED');
     } else {
-      ac.event(hull.index >= 2 ? 'TAIL STRIKE' : 'HULL CONTACT');
+      ac.event(hull.index >= AIRFRAME.tailParts ? 'TAIL STRIKE' : 'HULL CONTACT');
     }
   }
 

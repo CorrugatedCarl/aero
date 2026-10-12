@@ -2,38 +2,47 @@
 //
 // Units are SI (m, kg, s, N, rad) unless a name says otherwise.
 // Body frame: origin at the centre of gravity (CG), +x toward the nose, +y toward the canopy.
-// The numbers below describe the stand-in jet; docs/AERO.md explains where each one comes from
-// and how they get re-derived from your own sprite.
+// The numbers below are measured from ship.png; docs/AERO.md explains where each one comes from.
 
 import { DEG } from './util.js';
 
 // ---------------------------------------------------------------------------------------------
 // Sprite. Set src to your side-view image (nose pointing right) and the two numbers that place it.
 export const SPRITE = {
-  src: null,           // e.g. 'ship.png'; null draws the built-in stand-in jet
-  pxPerMeter: 40,      // image pixels per metre of airframe
-  cgPx: [330, 110],    // image pixel that sits on the centre of gravity
+  src: 'ship.png',     // your side-view sprite, nose pointing right (215 × 69 px)
+  pxPerMeter: 13.5,    // 215 px → 15.9 m long
+  cgPx: [96, 35],      // image pixel on the centre of gravity (see docs/AERO.md)
+  pixelArt: true,      // scale without smoothing so the pixels stay crisp
 };
 
 // ---------------------------------------------------------------------------------------------
 // Mass and the collision hull of the airframe.
 export const AIRFRAME = {
-  mass: 6280,          // kg, airframe + fuel + pilot (the gear bodies add GEAR masses on top: 6500 kg all-up)
-  radiusOfGyration: 2.6, // m, pitch axis; Iyy = mass · k²
-  length: 14.0,        // m, nose tip to tail cone
-  // convex pieces of the side profile (≤ 8 vertices each), body frame, metres
+  mass: 7740,          // kg, airframe + fuel + pilot (the gear bodies add GEAR masses on top: 8000 kg all-up)
+  radiusOfGyration: 3.0, // m, pitch axis; Iyy = mass · k²
+  length: 15.85,       // m, nose tip to the rear of the fins
+  // convex pieces traced from the sprite's silhouette (≤ 8 vertices each), body frame, metres
   hull: [
-    [[7.6, -0.05], [6.4, 0.35], [5.0, 0.62], [5.0, -0.46], [6.6, -0.32]],   // radome / nose
-    [[5.0, 0.62], [2.4, 1.15], [0.6, 0.95], [-3.0, 0.62], [-3.0, -0.5], [5.0, -0.46]], // cockpit + centre
-    [[-3.0, 0.62], [-3.0, -0.5], [-6.4, -0.06], [-6.4, 0.42]],              // aft fuselage
-    [[-4.4, 0.58], [-6.4, 0.42], [-6.9, 2.75], [-6.0, 2.75]],               // fin
+    [[6.96, 0.67], [8.74, 0.22], [8.74, -0.07], [6.96, -0.67]],             // nose (index 0: nose impacts)
+    [[5.11, 1.19], [6.96, 1.04], [6.96, -0.67], [5.11, -0.81]],
+    [[3.63, 1.26], [5.11, 1.19], [5.11, -1.11], [3.63, -1.11]],
+    [[1.78, 1.11], [3.63, 1.26], [3.63, -0.96], [1.78, -1.11]],
+    [[-0.44, 0.96], [1.78, 1.04], [1.78, -1.11], [-0.44, -1.26]],
+    [[-2.67, 1.26], [-0.44, 1.11], [-0.44, -1.26], [-2.67, -1.26]],
+    [[-4.89, 1.33], [-2.67, 1.26], [-2.67, -1.26], [-4.89, -1.26]],
+    [[-6.44, 1.19], [-4.89, 1.33], [-4.89, -1.26], [-6.44, -1.11]],
+    [[-6.96, 2.59], [-5.93, 2.59], [-4.96, 1.33], [-6.3, 1.33]],             // dorsal fin
+    [[-6.15, -1.26], [-4.96, -1.33], [-6.0, -2.44], [-7.11, -2.44]],         // ventral fin
+    [[-4.44, -1.33], [-0.74, -1.33], [-0.74, -2.3], [-2.96, -2.44], [-3.85, -2.44], [-4.44, -2.3]], // lower cannon pod
+    [[-4.89, 2.22], [-2.81, 2.22], [-0.74, 2.07], [-0.74, 1.85], [-2.81, 1.41], [-4.89, 1.41]],     // upper cannon pod
   ],
-  // where the moving parts are drawn (body frame, metres); purely visual
+  tailParts: 6,        // hull pieces from this index on count as the tail for strike messages
+  // where the moving parts are drawn (body frame, metres); a chord or length of 0 hides that part
   visual: {
-    flapHinge: [-1.25, -0.22], flapChord: 1.0,
-    elevatorHinge: [-6.45, 0.35], elevatorChord: 0.6,
-    speedBrakeHinge: [-0.9, -0.5], speedBrakeLength: 1.3,
-    nozzle: [-6.55, 0.17], nozzleRadius: 0.3,
+    flapHinge: [-2.0, -0.4], flapChord: 0,
+    elevatorHinge: [-6.6, 0], elevatorChord: 0,
+    speedBrakeHinge: [0.4, -1.26], speedBrakeLength: 1.5,
+    nozzle: [-6.55, -0.07], nozzleRadius: 0.7,
   },
   hullFriction: 0.45,  // metal on ground: a belly landing slides to a stop
   // a hull impact that changes the airframe's velocity by more than this is a crash, m/s
@@ -45,10 +54,10 @@ export const AIRFRAME = {
 // ---------------------------------------------------------------------------------------------
 // Aerodynamic surfaces. ac = aerodynamic centre (quarter chord) in the body frame.
 export const WING = {
-  ac: [0.45, -0.15],
-  area: 26.0,          // m², planform, both sides
-  span: 9.4,           // m (AR = b²/S = 3.4)
-  mac: 2.77,           // m, mean aerodynamic chord = S / b
+  ac: [0.52, -0.2],
+  area: 32.0,          // m², planform, both sides (hidden in the side view; see docs/AERO.md)
+  span: 10.4,          // m (AR = b²/S = 3.4)
+  mac: 3.08,           // m, mean aerodynamic chord = S / b
   incidence: 1.0 * DEG, // chord angle to the fuselage datum
   alpha0: -1.2 * DEG,  // zero-lift angle (slightly cambered section)
   clMax: 1.15,         // clean, positive stall
@@ -60,9 +69,9 @@ export const WING = {
 };
 
 export const TAIL = {
-  ac: [-6.0, 0.35],
-  area: 6.5,
-  span: 4.6,
+  ac: [-5.6, 0],       // quarter chord of the X-tail panels at the rear
+  area: 10.0,          // m², horizontal projection of the four X-tail panels
+  span: 5.0,
   incidence: 0.7 * DEG,
   alpha0: 0,           // symmetric section
   clMax: 1.0,
@@ -76,15 +85,15 @@ export const TAIL = {
   elevatorMax: 28 * DEG,  // deflection either way
   elevatorTau: 0.70,      // effectiveness: Δα_tail = τ · δe
   elevatorRate: 60 * DEG, // actuator rate, rad/s
-  trimMax: 8 * DEG,       // elevator trim authority either way
+  trimMax: 12 * DEG,      // elevator trim authority either way
   trimRate: 1.5 * DEG,    // rad/s while a trim button is held
-  takeoffTrim: -7.5 * DEG, // set on the runway: holds about 170 kt hands-off with take-off flaps
+  takeoffTrim: -10 * DEG,  // set on the runway: hands-off climb at about 170 kt with take-off flaps
 };
 
 // Drag-only items: CdA in m², applied at a body-frame point.
-export const FUSELAGE = { cda: 0.55, point: [0.6, 0.1] };
-export const GEAR_DRAG = { cda: 0.85, point: [0.6, -1.2] };          // scales with extension
-export const SPEED_BRAKE = { cda: 1.4, point: [-1.6, -0.62], rate: 1.6 }; // rate: deploy fraction per second
+export const FUSELAGE = { cda: 0.8, point: [0.5, 0] };
+export const GEAR_DRAG = { cda: 1.0, point: [1.5, -2.2] };           // scales with extension
+export const SPEED_BRAKE = { cda: 1.6, point: [-0.3, -1.4], rate: 1.6 };  // rate: deploy fraction per second
 
 // Flap settings. dCl0 shifts the lift curve up, dClMax raises the stall CL (so the stall AoA drops),
 // dCd0 is extra profile drag, dCm is extra nose-down moment.
@@ -105,9 +114,9 @@ export const GROUND_EFFECT = { liftBoost: 0.18 };
 
 // ---------------------------------------------------------------------------------------------
 export const ENGINE = {
-  point: [-5.6, -0.05],  // thrust line slightly below the CG: a little nose-up with power
-  thrustDry: 30000,      // N at 100% (sea level, static)
-  thrustAB: 46000,       // N with the afterburner lit
+  point: [-6.4, -0.07],  // the blue nozzle at the rear; thrust line just below the CG: a little nose-up with power
+  thrustDry: 37000,      // N at 100% (sea level, static)
+  thrustAB: 57000,       // N with the afterburner lit
   idleThrust: 0.05,      // fraction of dry thrust at idle
   idleSpool: 0.22,       // spool (N2) fraction at idle
   spoolUpSlow: 3.2,      // s time constant spooling up from idle…
@@ -127,16 +136,16 @@ export const GEAR = {
   rollingTorque: 40,     // N·m of rolling resistance per wheel
   legs: [
     {
-      id: 'nose', attach: [4.6, -0.42], length: 1.33, retract: 1.62,
-      wheelRadius: 0.30, wheelMass: 40, strutMass: 20,
-      stiffness: 160e3, damping: 14e3, travel: 0.24,
-      collapseForce: 75e3, brakeTorque: 0,
+      id: 'nose', attach: [4.55, -1.26], length: 2.27, retract: 2.59,
+      wheelRadius: 0.32, wheelMass: 45, strutMass: 25,
+      stiffness: 200e3, damping: 17e3, travel: 0.24,
+      collapseForce: 90e3, brakeTorque: 0,
     },
     {
-      id: 'main', attach: [-0.8, -0.42], length: 1.21, retract: 1.58,
-      wheelRadius: 0.42, wheelMass: 120, strutMass: 40,
-      stiffness: 520e3, damping: 52e3, travel: 0.27,
-      collapseForce: 300e3, brakeTorque: 22e3,
+      id: 'main', attach: [-1.0, -1.26], length: 2.14, retract: 2.59,
+      wheelRadius: 0.45, wheelMass: 140, strutMass: 50,
+      stiffness: 620e3, damping: 62e3, travel: 0.27,
+      collapseForce: 360e3, brakeTorque: 28e3,
     },
   ],
 };

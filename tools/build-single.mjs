@@ -1,4 +1,4 @@
-// tools/build-single.mjs — inlines style.css and every module under src/ into one HTML file.
+// tools/build-single.mjs — inlines style.css, the sprite and every module under src/ into one HTML file.
 //   node tools/build-single.mjs            → dist/aero.html           (standalone page)
 //   node tools/build-single.mjs --fragment → dist/aero-fragment.html  (no <html>/<head>/<body>, for hosts that wrap it)
 // Each module becomes a function scope; imports become destructuring of the module it names.
@@ -16,6 +16,11 @@ const id = (spec) => '__' + path.basename(spec, '.js');
 let js = '';
 for (const name of order) {
   let src = read(`src/${name}.js`);
+  // embed the sprite so the single file needs nothing next to it
+  if (name === 'config') {
+    src = src.replace(/src: '([^']+\.png)'/, (_, file) =>
+      `src: 'data:image/png;base64,${fs.readFileSync(path.join(root, file)).toString('base64')}'`);
+  }
   const exportsList = [];
   src = src.replace(/^import\s*\{([\s\S]*?)\}\s*from\s*'([^']+)';?[ \t]*$/gm, (_, names, spec) => {
     const parts = names.split(',').map((s) => s.trim()).filter(Boolean)
