@@ -24,6 +24,7 @@ html, body {
   overscroll-behavior: none;
 }
 #view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+:fullscreen, :-webkit-full-screen { background: #6f93c6; }
 
 button {
   font: 700 13px/1.1 var(--sans); color: var(--text); letter-spacing: 0.04em;

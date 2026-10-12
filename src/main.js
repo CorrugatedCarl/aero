@@ -48,6 +48,26 @@ const restore = (d = {}) => {
 };
 
 window.addEventListener('resize', () => renderer.resize());
+
+// full screen: the Fullscreen API where the browser allows it; launched from the Home Screen
+// the page is already full screen, so the button hides itself
+const root = document.documentElement, fullBtn = $('#bFull');
+const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+const fsRequest = root.requestFullscreen || root.webkitRequestFullscreen;
+const fsExit = document.exitFullscreen || document.webkitExitFullscreen;
+const standalone = navigator.standalone || matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches;
+fullBtn.hidden = standalone || !fsRequest;
+const fsLabel = () => { fullBtn.textContent = fsElement() ? 'Exit full screen' : 'Full screen'; renderer.resize(); };
+for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) document.addEventListener(ev, fsLabel);
+fullBtn.addEventListener('click', async () => {
+  try {
+    if (fsElement()) await fsExit.call(document);
+    else await fsRequest.call(root, { navigationUI: 'hide' });
+  } catch {
+    fullBtn.textContent = 'Blocked here: use Add to Home Screen';
+    setTimeout(fsLabel, 3500);
+  }
+});
 document.addEventListener('visibilitychange', () => { if (document.hidden) setPaused(true); });
 document.addEventListener('gesturestart', (e) => e.preventDefault()); // no pinch-zoom on iPad
 
