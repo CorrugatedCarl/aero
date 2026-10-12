@@ -49,6 +49,9 @@ const restore = (d = {}) => {
 
 window.addEventListener('resize', () => renderer.resize());
 
+// offline play once installed; where there is no sw.js (or no service workers) this quietly does nothing
+navigator.serviceWorker?.register('sw.js').catch(() => {});
+
 // full screen: the Fullscreen API where the browser allows it; launched from the Home Screen
 // the page is already full screen, so the button hides itself
 const root = document.documentElement, fullBtn = $('#bFull');

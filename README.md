@@ -18,6 +18,17 @@ Or build one self-contained file (Planck.js still loads from jsDelivr):
 node tools/build-single.mjs     # → dist/aero.html
 ```
 
+## Install on the iPad
+
+Live at **https://corrugatedcarl.github.io/aero/** once GitHub Pages is on (repo Settings → Pages →
+Deploy from a branch → `main`, `/ (root)`).
+
+1. Open that address in Chrome or Safari on the iPad and wait for the runway to appear.
+2. Tap **Share → Add to Home Screen**.
+3. Launch **Aero** from the Home Screen: it opens full screen in landscape and works offline
+   (`sw.js` caches the game on first launch). A new version is picked up in the background and
+   shows on the next launch.
+
 ## Fly it
 
 * **Take off:** push the throttle to the top (MIL) and let it spool up. Pull back at about
