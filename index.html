@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Aero Test Range</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612:wght@400;700&family=B612+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="view"></canvas>
+
+<div class="bar left">
+  <button id="bPause" type="button">Pause</button>
+  <button id="bReset" type="button">Reset</button>
+  <button id="bApproach" type="button">Final approach</button>
+</div>
+<div class="bar right">
+  <button id="bDebug" type="button">Debug</button>
+  <button id="bInvert" type="button" title="Invert the touch stick">Invert stick</button>
+</div>
+
+<div class="cluster left">
+  <div id="throttle" class="track" role="slider" aria-label="Throttle">
+    <span class="zone-ab">AB</span>
+    <span class="detent"></span>
+    <span class="mark top">MIL</span>
+    <span class="mark bottom">IDLE</span>
+    <span class="thumb"><span class="readout">0%</span></span>
+  </div>
+  <div class="column">
+    <button id="bGear" class="sys on" type="button">GEAR<span class="state">DOWN</span></button>
+    <button id="bFlaps" class="sys" type="button">FLAPS<span class="state">T/O</span></button>
+    <button id="bSpdBrk" class="sys" type="button">SPD BRK<span class="state">hold</span></button>
+  </div>
+</div>
+
+<div class="cluster right">
+  <div class="column">
+    <button id="bTrimUp" class="sys" type="button" data-dir="1">TRIM<span class="state">nose up</span></button>
+    <button id="bTrimDn" class="sys" type="button" data-dir="-1">TRIM<span class="state">nose down</span></button>
+    <button id="bBrakes" class="sys" type="button">BRAKES<span class="state">hold</span></button>
+  </div>
+  <div id="stick" class="track spring" role="slider" aria-label="Pitch">
+    <span class="mark top">PUSH</span>
+    <span class="mark bottom">PULL</span>
+    <span class="centre"></span>
+    <span class="thumb"></span>
+  </div>
+</div>
+
+<div id="paused" class="overlay" hidden>
+  <div class="card">
+    <h2>Paused</h2>
+    <dl class="keys">
+      <dt>Touch</dt><dd>Left: throttle (top zone = afterburner), gear, flaps, speed brake. Right: pitch stick, trim, wheel brakes.</dd>
+      <dt>Xbox</dt><dd>Left stick pitch · RT/LT or right stick throttle · A gear · X flaps · B speed brake · LB brakes · Y afterburner · D-pad trim · Menu pause · View reset</dd>
+      <dt>Keys</dt><dd>W/S pitch · Shift/Ctrl throttle · A afterburner · G gear · F flaps · V speed brake · B brakes · [ ] trim · T final approach · R reset · D debug · P pause</dd>
+    </dl>
+    <button id="bResume" class="primary" type="button">Resume</button>
+  </div>
+</div>
+
+<div id="crash" class="overlay" hidden>
+  <div class="card">
+    <h2>Crashed</h2>
+    <p id="crashWhy"></p>
+    <button id="bRespawn" class="primary" type="button">Respawn on runway</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/planck@1.5.0/dist/planck.min.js"></script>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
